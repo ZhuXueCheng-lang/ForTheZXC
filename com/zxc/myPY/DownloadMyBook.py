@@ -6,12 +6,9 @@ import time
 from elasticsearch import Elasticsearch
 import threading
 from concurrent.futures import ThreadPoolExecutor
-"""
-从www.biqubao.com笔趣阁爬取小说，楼主教程中的网址我当时没打开，
-就参照楼主教程，爬取了笔趣阁小说网的内容。
-    2018-07-31
-"""
-es = Elasticsearch('172.18.35.17:9200')
+
+
+es = Elasticsearch('http://localhost:9200')
 #通用网络超时自关闭线程
 
 def DownloadBook(target):
@@ -85,6 +82,8 @@ def DownINpc(name):
     global book
     # 本地保存爬取的文本根路径
     save_path = 'Book'
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
     # 根据小说名称创建一个文件夹,如果不存在就新建
     dir_path = save_path + '/' + name
     if not os.path.exists(dir_path):
@@ -122,7 +121,9 @@ def findURL(thetype,keyWord):
             "match": {
                 f"{thetype}": f"{keyWord}"
             }
-        }
+        },
+        "from": 1,
+        "size": 100
     }
     res = es.search(index="biqu_book", body=doc)
     itme=res.get('hits').get('hits')
@@ -148,5 +149,5 @@ if __name__=='__main__':
     url=findURL(thetype,keyWord)
     DownTime=True
     book={}
-    pool = ThreadPoolExecutor(max_workers=40)
+    pool = ThreadPoolExecutor(max_workers=30)
     DownloadBook(url)
